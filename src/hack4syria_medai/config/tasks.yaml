@@ -13,7 +13,8 @@ privacy_check:
   description: >-
     Analyze the translated text for any personally identifiable information (PII) and sensitive
     health information. Apply WHO-compliant masking to protect patient privacy while preserving
-    medically relevant information. Check for and mask: names, dates of birth, addresses, contact
+    medically relevant information. Keep infomration related to the health issue's frequncy and timeline.
+    Check for and mask: names, dates of birth, addresses, contact
     information, unique medical identifiers, and any other identifying details.
   expected_output: >-
     A privacy-compliant version of the medical text with all PII appropriately masked, along

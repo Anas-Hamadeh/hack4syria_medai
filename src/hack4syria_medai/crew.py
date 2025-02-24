@@ -1,25 +1,18 @@
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 from crewai_tools import SerperDevTool
-from langchain_community.tools.pubmed.tool import PubmedQueryRun
-
-# If you want to run a snippet of code before or after the crew starts,
-# you can use the @before_kickoff and @after_kickoff decorators
-# https://docs.crewai.com/concepts/crews#example-crew-class-with-decorators
 
 
 @CrewBase
 class Hack4SyriaMedai:
     """Hack4SyriaMedai crew"""
 
-    # Learn more about YAML configuration files here:
-    # Agents: https://docs.crewai.com/concepts/agents#yaml-configuration-recommended
-    # Tasks: https://docs.crewai.com/concepts/tasks#yaml-configuration-recommended
     agents_config = "config/agents.yaml"
     tasks_config = "config/tasks.yaml"
 
-    # If you would like to add tools to your agents, you can learn more about it here:
-    # https://docs.crewai.com/concepts/agents#agent-tools
+    # Instantiate tools
+    search_tool = SerperDevTool()
+
     @agent
     def translation_agent(self) -> Agent:
         print(f"Translation agent config: {self.agents_config['translation_agent']}")
@@ -47,7 +40,11 @@ class Hack4SyriaMedai:
 
     @agent
     def medical_knowledge_agent(self) -> Agent:
-        return Agent(config=self.agents_config["medical_knowledge_agent"], verbose=True)
+        return Agent(
+            config=self.agents_config["medical_knowledge_agent"],
+            verbose=True,
+            tools=[self.search_tool],
+        )
 
     @agent
     def final_output_agent(self) -> Agent:
@@ -59,14 +56,15 @@ class Hack4SyriaMedai:
         return Task(
             config=self.tasks_config["translation_to_ar"],
             agent=self.translation_agent(),
-            output_file="output/translated_text_ar.txt",
+            output_file="output/1.translated_text_ar.md",
         )
 
     @task
     def privacy_check(self) -> Task:
         return Task(
-            config=self.tasks_config["privacy_check"], agent=self.privacy_agent(),
-            output_file="output/privacy_check_output.txt"
+            config=self.tasks_config["privacy_check"],
+            agent=self.privacy_agent(),
+            output_file="output/2.privacy_check_output.md",
         )
 
     @task
@@ -74,14 +72,15 @@ class Hack4SyriaMedai:
         return Task(
             config=self.tasks_config["information_gathering"],
             agent=self.first_line_support_agent(),
-            output_file="output/information_gathering_output.txt",
+            output_file="output/3.information_gathering_output.md",
         )
 
     @task
     def initial_diagnosis(self) -> Task:
         return Task(
-            config=self.tasks_config["initial_diagnosis"], agent=self.diagnosis_agent(),
-            output_file="output/initial_diagnosis_output.txt",
+            config=self.tasks_config["initial_diagnosis"],
+            agent=self.diagnosis_agent(),
+            output_file="output/4.initial_diagnosis_output.md",
         )
 
     @task
@@ -89,7 +88,7 @@ class Hack4SyriaMedai:
         return Task(
             config=self.tasks_config["cardiac_consultation"],
             agent=self.cardiology_specialist_agent(),
-            output_file="output/cardiac_consultation_output.txt",
+            output_file="output/5.cardiac_consultation_output.md",
         )
 
     @task
@@ -97,8 +96,7 @@ class Hack4SyriaMedai:
         return Task(
             config=self.tasks_config["medical_validation"],
             agent=self.medical_knowledge_agent(),
-            tools=[SerperDevTool()],
-            output_file="output/medical_validation_output.txt",
+            output_file="output/6.medical_validation_output.md",
         )
 
     @task
@@ -106,7 +104,7 @@ class Hack4SyriaMedai:
         return Task(
             config=self.tasks_config["final_report_generation"],
             agent=self.final_output_agent(),
-            output_file="output/final_report.txt",
+            output_file="output/7.final_report_en.md",
         )
 
     @task
@@ -114,18 +112,16 @@ class Hack4SyriaMedai:
         return Task(
             config=self.tasks_config["final_translation"],
             agent=self.translation_agent(),
-            output_file="output/final_report_ar.txt",
+            output_file="output/8.final_report_ar.md",
         )
 
     @crew
     def crew(self) -> Crew:
         """Creates the Hack4SyriaMedai crew"""
-        # To learn how to add knowledge sources to your crew, check out the documentation:
-        # https://docs.crewai.com/concepts/knowledge#what-is-knowledge
 
         return Crew(
-            agents=self.agents,  # Automatically created by the @agent decorator
-            tasks=self.tasks,  # Automatically created by the @task decorator
+            agents=self.agents,
+            tasks=self.tasks,
             process=Process.sequential,
             verbose=True,
         )
